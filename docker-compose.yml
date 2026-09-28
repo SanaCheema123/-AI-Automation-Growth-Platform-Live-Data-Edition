@@ -1,0 +1,57 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: automation
+      POSTGRES_USER: automation
+      POSTGRES_PASSWORD: automation
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U automation -d automation"]
+      interval: 5s
+      timeout: 5s
+      retries: 12
+
+  backend:
+    build: ./backend
+    environment:
+      ENVIRONMENT: development
+      SECRET_KEY: ${SECRET_KEY:-docker-development-secret-change-before-production-12345}
+      DATABASE_URL: postgresql+psycopg://automation:automation@postgres:5432/automation
+      SUPABASE_DB_URL: ""
+      AUTO_CREATE_TABLES: "true"
+      CORS_ORIGINS: http://localhost:5173,http://127.0.0.1:5173
+      AI_PROVIDER: ${AI_PROVIDER:-auto}
+      AI_FALLBACK_TO_SECONDARY: ${AI_FALLBACK_TO_SECONDARY:-true}
+      AI_LOG_CONTENT: ${AI_LOG_CONTENT:-false}
+      GEMINI_API_KEY: ${GEMINI_API_KEY:-}
+      GEMINI_MODEL: ${GEMINI_MODEL:-gemini-2.5-flash}
+      GROQ_API_KEY: ${GROQ_API_KEY:-}
+      GROQ_MODEL: ${GROQ_MODEL:-openai/gpt-oss-20b}
+    ports:
+      - "8000:8000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/health', timeout=3).read()"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  frontend:
+    build: ./frontend
+    ports:
+      - "5173:5173"
+    depends_on:
+      backend:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:5173/health >/dev/null || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+volumes:
+  postgres_data:
