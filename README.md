@@ -1,5 +1,10 @@
 # AI Automation Growth Platform — Live Data Edition
 
+
+
+https://github.com/user-attachments/assets/743a8f61-2578-42b0-bcf0-5b6d537451dd
+
+
 A lean multi-tenant SaaS application for live CRM records, events, AI-assisted qualification/content, human approvals, workflows, and analytics.
 
 This edition intentionally contains **no seeded demo workspace, no demo login, no sample customer records, and no deterministic Demo AI provider**. New workspaces start empty and all metrics come from stored workspace data.
